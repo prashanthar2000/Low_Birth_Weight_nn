@@ -9,7 +9,7 @@ import numpy as np
 
 from sklearn.model_selection import train_test_split
 import time
-np.random.seed(138)
+
 
 # In[13]:
 
@@ -17,13 +17,12 @@ np.random.seed(138)
 class NN:
 
 	
-  def __init__(self,sizes,epochs,l_rate,beta):
+  def __init__(self,sizes=[8,8,7,1],epochs=750,l_rate=0.05):
     self.sizes=sizes
     self.epochs=epochs
     self.l_rate=l_rate
-    self.beta=beta
     self.params=self.initialization()
-    
+    np.random.seed(100)
   
   def sigmoid(self, x, derivative=False):
     if derivative:
@@ -135,32 +134,11 @@ class NN:
     '''
     Function that trains the neural network by taking x_train and y_train samples as input
     '''
-    params = self.params
-    dW1 = np.zeros(params["W1"].shape)
-    db1 = np.zeros(params["b1"].shape)
-    dW2 = np.zeros(params["W2"].shape)
-    db2 = np.zeros(params["b2"].shape)
-    dW3 = np.zeros(params["W3"].shape)
-    db3= np.zeros(params["b3"].shape)
     for iteration in range(self.epochs):
           for x,y in zip(X,Y):
                 output = self.forward_pass(x)
-                grads = self.backward_pass(y, output)
-                dW1 = (self.beta * dW1 + (1. - self.beta) * grads["W1"])
-                db1 = (self.beta * db1 + (1. - self.beta) * grads["b1"])
-                dW2 = (self.beta * dW2 + (1. - self.beta) * grads["W2"])
-                db2 = (self.beta * db2 + (1. - self.beta) * grads["b2"])
-                dW3 = (self.beta * dW3 + (1. - self.beta) * grads["W3"])
-                db3 = (self.beta * db3+ (1. - self.beta) * grads["b3"])
-
-
-                params["W1"] = params["W1"] - self.l_rate * dW1
-                params["b1"] = params["b1"] - self.l_rate* db1
-                params["W2"] = params["W2"] - self.l_rate * dW2
-                params["b2"] = params["b2"] - self.l_rate * db2
-                params["W3"] = params["W3"] - self.l_rate * dW3
-                params["b3"] = params["b3"] - self.l_rate * db3
-                
+                changes_to_w = self.backward_pass(y, output)
+                self.update_network_parameters(changes_to_w)
 
   def predict(self,X):
     yhat=[]
@@ -216,14 +194,13 @@ class NN:
     p= tp/(tp+fp)
     r=tp/(tp+fn)
     f1=(2*p*r)/(p+r)
-    acc=(tp+tn)/(tp+tn+fp+fn)
+    
     print("Confusion Matrix : ")
     print(cm)
     print("\n")
     print(f"Precision : {p}")
     print(f"Recall : {r}")
     print(f"F1 SCORE : {f1}")
-    print(f"Accuracy : {acc}")
 
 
 
@@ -241,7 +218,7 @@ if __name__ == "__main__":
   df_norm['Residence']=df_norm['Residence'].map({2: 1, 1: 0})
   df_norm.astype(float)
   df_norm.head()
-  
+  type(df_norm)
 
   y=df_norm.Result
   x=df_norm.drop('Result',axis=1)
@@ -252,7 +229,7 @@ if __name__ == "__main__":
   x_test=np.array(x_test,dtype=float)
 
 
-  dnn=NN([8,7,5,1],1000,0.05,0.9)
+  dnn=NN(sizes=[8,8,7,1])
   dnn.fit(X,Y)
 
   pred_train=dnn.predict(X)
